@@ -1,0 +1,178 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for authentication & ownership verification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    // ------------------------------------------------------------------------
+    // 1. USERS COLLECTION (users/{uid})
+    // ------------------------------------------------------------------------
+    // A user can read and update their own private profile.
+    // Unauthenticated or unrelated users CANNOT read private profile details.
+    match /users/{userId} {
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // 2. SHOPS COLLECTION (shops/{shopId})
+    // ------------------------------------------------------------------------
+    // Phase 0: A seller can only manage shops they own.
+    // Public Storefront Evolution Note:
+    // When public storefront browsing is implemented in Phase 1/2,
+    // read access will be updated to: `allow read: if resource.data.status == 'active';`
+    // while create/update/delete strictly remain restricted to the owner.
+    match /shops/{shopId} {
+      allow read: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+
+      // Nested subcollections under shops
+      match /inventory/{itemId} {
+        allow read, write: if isAuthenticated() && 
+          get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid;
+      }
+
+      match /products/{productId} {
+        allow read, write: if isAuthenticated() && (
+          get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid ||
+          resource.data.ownerUid == request.auth.uid ||
+          request.resource.data.ownerUid == request.auth.uid ||
+          isAdmin()
+        );
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // 3. PRODUCTS COLLECTION (products/{productId})
+    // ------------------------------------------------------------------------
+    // A seller can only manage products belonging to their own shop.
+    // Public Storefront Evolution Note:
+    // Future public shop view will allow reading published products:
+    // `allow read: if resource.data.status == 'published';`
+    match /products/{productId} {
+      allow read: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+    }
+
+    // ------------------------------------------------------------------------
+    // BRAND CONCEPTS (brandConcepts/{conceptId})
+    // ------------------------------------------------------------------------
+    match /brandConcepts/{conceptId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.ownerUid == request.auth.uid ||
+        request.resource.data.ownerUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // ------------------------------------------------------------------------
+    // 4. ORDERS COLLECTION (orders/{orderId})
+    // ------------------------------------------------------------------------
+    // Private orders must not be readable by unrelated users.
+    // Only the buyer, the seller of the shop, or an admin can access an order.
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        resource.data.buyerUid == request.auth.uid ||
+        resource.data.sellerUid == request.auth.uid ||
+        isAdmin()
+      );
+      // Order creation is reserved for verified checkout sessions (client creates pending or via Cloud Function)
+      allow create: if isAuthenticated() && request.resource.data.buyerUid == request.auth.uid;
+      // Status transitions (e.g. processing, shipped, delivered) can only be updated by the seller or Cloud Functions
+      allow update: if isAuthenticated() && (resource.data.sellerUid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // 5. TRANSACTIONS, SUBSCRIPTIONS & CUSTOMERS
+    // ------------------------------------------------------------------------
+    match /customers/{customerId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.shopOwnerUid == request.auth.uid ||
+        request.resource.data.shopOwnerUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // Critical financial data: writes are prohibited from client apps and only allowed via Admin/Cloud Functions.
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (resource.data.sellerUid == request.auth.uid || isAdmin());
+      allow write: if isAdmin(); // Enforces server-side payment verification (Paystack webhook)
+    }
+
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if isAdmin(); // Server-side webhook only
+    }
+
+    // ------------------------------------------------------------------------
+    // 6. MARKETING & SNAP BATTLES & NOTIFICATIONS
+    // ------------------------------------------------------------------------
+    match /marketing/{campaignId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.ownerUid == request.auth.uid ||
+        request.resource.data.ownerUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    match /notifications/{notificationId} {
+      allow read, update: if isAuthenticated() && resource.data.recipientUid == request.auth.uid;
+      allow create: if isAdmin(); // notifications triggered by system/events
+    }
+
+    match /snapBattles/{battleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // 7. PHASE 7: PRINTIFY INTEGRATION COLLECTIONS
+    // ------------------------------------------------------------------------
+    // Strict seller tenancy isolation:
+    // Only the seller owning the shop/product/order can access their Printify mappings.
+    // Customers and unrelated sellers have zero read/write access.
+    // Printify API tokens are strictly server-side and never stored in Firestore documents.
+    match /printifyConnections/{connectionId} {
+      allow read, update, delete: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /printifyProductMappings/{mappingId} {
+      allow read, update, delete: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /printifyOrderMappings/{mappingId} {
+      allow read: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow write: if isAdmin(); // Server-side webhook / function only
+    }
+
+    match /printifyOperations/{operationId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.ownerUid == request.auth.uid ||
+        request.resource.data.ownerUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    match /printifySyncLogs/{logId} {
+      allow read: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+  }
+}

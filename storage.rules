@@ -1,0 +1,52 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validate that uploaded file is an image and <= 10MB
+    function isValidImage() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|webp)') &&
+             request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // 1. User Profile Images: users/{uid}/profile.{ext}
+    match /users/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidImage();
+    }
+
+    // 2. User Uploaded Snaps (Raw photos for AI Brand generation): snaps/{uid}/{fileName}
+    match /snaps/{userId}/{fileName} {
+      allow read, write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
+    }
+
+    // 3. Shop Assets (Logos, banners): shops/{ownerUid}/{shopId}/{fileName}
+    match /shops/{ownerUid}/{shopId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(ownerUid) && isValidImage();
+      allow delete: if isOwner(ownerUid);
+    }
+
+    // 4. Product Mockups & Artwork: products/{ownerUid}/{productId}/{fileName}
+    match /products/{ownerUid}/{productId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(ownerUid) && isValidImage();
+      allow delete: if isOwner(ownerUid);
+    }
+
+    // 5. Marketing Creatives: marketing/{ownerUid}/{fileName}
+    match /marketing/{ownerUid}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(ownerUid) && isValidImage();
+      allow delete: if isOwner(ownerUid);
+    }
+  }
+}

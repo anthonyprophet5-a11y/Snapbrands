@@ -1,0 +1,664 @@
+{
+  "valence-audio": {
+    "storeId": "store_live_valence-audio",
+    "name": "Valence Audio",
+    "handle": "valence-audio",
+    "tagline": "Uncompromised sound for modern focus.",
+    "description": "Minimalist, precision-engineered audio gear designed to elevate everyday listening and deep work.",
+    "story": "Valence Audio was born from a desire to strip away visual clutter and deliver unadulterated soundscapes. We blend precision acoustic engineering with tactile, modern design tailored for creators, thinkers, and commuters. Every element\u2014from matte tactile surfaces to custom-tuned drivers\u2014is crafted to keep you seamlessly in your flow.",
+    "category": "Consumer Electronics",
+    "archetype": "retail",
+    "businessMode": "REAL_SHOP",
+    "theme": "MODERN",
+    "primaryColor": "#1A1A1A",
+    "secondaryColor": "#D5C5B5",
+    "backgroundColor": "#F5F4F0",
+    "textColor": "#111111",
+    "surfaceColor": "#FFFFFF",
+    "accentColor": "#9EA6AD",
+    "borderColor": "#e4e4e7",
+    "fontDisplay": "\"Plus Jakarta Sans\", sans-serif",
+    "fontBody": "\"Inter\", sans-serif",
+    "currency": "USD",
+    "currencySymbol": "$",
+    "country": "US",
+    "location": "Global / Digital Warehouse",
+    "contactEmail": "hello@valence-audio.com",
+    "contactPhone": "+1 (555) 019-2831",
+    "whatsappNumber": "+15550192831",
+    "deliveryInformation": "Tracked domestic delivery within 3-5 business days. Express options available at checkout.",
+    "fixedDeliveryFee": 0.0,
+    "shippingPolicy": "Dispatched within 24-48 business hours with tracking confirmation email.",
+    "returnPolicy": "30-day money-back guarantee for unused items in original packaging.",
+    "privacyPolicy": "Customer data is encrypted and used exclusively for shipment delivery fulfillment.",
+    "logoUrl": "/images/logo.jpg",
+    "coverImageUrl": "/public/images/headset.jpg",
+    "status": "PUBLISHED",
+    "brandPersonality": [
+      "Minimalist",
+      "Precision-Engineered",
+      "Sophisticated"
+    ],
+    "detectedSubject": "Wireless Over-Ear Headphones",
+    "visualStyle": "Dark-mode aesthetic balanced with warm wood tones, crisp brushed silver highlights, sleek matte surfaces, and clean architectural product photography.",
+    "featuredProductIds": [
+      "prod_valence-audio_1"
+    ],
+    "products": [
+      {
+        "id": "prod_valence-audio_1",
+        "title": "Valence Audio ProSound Wireless Over-Ear Headphones",
+        "shortDescription": "Sleek matte black Bluetooth over-ear headphones with active noise cancellation and silver accents.",
+        "description": "Experience immersive acoustic clarity with the Valence Audio ProSound Wireless Over-Ear Headphones. Crafted with a premium matte black finish and brushed silver accents, these headphones combine sophisticated aesthetics with high-fidelity performance. Designed for extended listening sessions, they feature ultra-soft memory foam ear cushions and up to 35 hours of continuous playback on a single charge.",
+        "price": 149.0,
+        "currency": "USD",
+        "priceType": "FIXED",
+        "category": "Consumer Electronics",
+        "type": "PHYSICAL",
+        "displayStatus": "AVAILABLE",
+        "inventory": 18,
+        "isFeatured": true,
+        "imageUrl": "/public/images/headset.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Advanced Active Noise Cancellation with Ambient Sound Mode",
+          "Up to 35-hour battery life with 10-minute quick charge",
+          "Ergonomic memory foam cushions with brushed silver accents"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_valence-audio_1_1",
+            "title": "Matte Black / Silver Accents",
+            "price": 149.0,
+            "inventory": 12
+          },
+          {
+            "id": "var_prod_valence-audio_1_2",
+            "title": "Matte Black + Braided Audio Cable Kit",
+            "price": 169.0,
+            "inventory": 6
+          }
+        ]
+      },
+      {
+        "id": "prod_valence-audio_2",
+        "title": "Valence Audio Protective Hard-Shell Travel Case",
+        "shortDescription": "Weather-resistant custom molded travel case for over-ear headphones.",
+        "description": "Protect your headphones on the go with the Valence Audio Hard-Shell Travel Case. Engineered with a shockproof EVA exterior and a soft interior velvet lining, this case prevents scratches and impact damage. Features a dedicated internal mesh pocket to neatly store charging cables and audio adapters.",
+        "price": 29.0,
+        "currency": "USD",
+        "priceType": "FIXED",
+        "category": "Consumer Electronics",
+        "type": "PHYSICAL",
+        "displayStatus": "AVAILABLE",
+        "inventory": 35,
+        "isFeatured": false,
+        "imageUrl": "/public/images/headset.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Shockproof and water-resistant EVA outer shell",
+          "Scratch-resistant velvet interior lining",
+          "Integrated mesh pocket for cables and dongles"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_valence-audio_2_1",
+            "title": "Matte Black",
+            "price": 29.0,
+            "inventory": 20
+          },
+          {
+            "id": "var_prod_valence-audio_2_2",
+            "title": "Dark Heather Grey",
+            "price": 29.0,
+            "inventory": 15
+          }
+        ]
+      }
+    ],
+    "isProductionGenerated": true,
+    "sourceInputType": "headphones",
+    "sourceImage": "/public/images/headset.jpg"
+  },
+  "aerovolt-athletics": {
+    "storeId": "store_live_aerovolt-athletics",
+    "name": "AEROVOLT",
+    "handle": "aerovolt-athletics",
+    "tagline": "Relentless momentum, engineered for speed.",
+    "description": "High-performance athletic footwear combining precision engineering with high-visibility aesthetics for dedicated runners.",
+    "story": "AEROVOLT was built at the intersection of biomechanical precision and explosive energy. We engineer elite running footwear designed to push limits and light up every stride. Our mission is to propel athletes forward through relentless innovation, ultimate cushioning, and striking modern design.",
+    "category": "Footwear & Athletic Gear",
+    "archetype": "retail",
+    "businessMode": "REAL_SHOP",
+    "theme": "MODERN",
+    "primaryColor": "#111315",
+    "secondaryColor": "#FFFFFF",
+    "backgroundColor": "#0B0C0E",
+    "textColor": "#F4F5F7",
+    "surfaceColor": "#1A1D21",
+    "accentColor": "#CCFF00",
+    "borderColor": "#e4e4e7",
+    "fontDisplay": "\"Plus Jakarta Sans\", sans-serif",
+    "fontBody": "\"Inter\", sans-serif",
+    "currency": "USD",
+    "currencySymbol": "$",
+    "country": "US",
+    "location": "Global / Digital Warehouse",
+    "contactEmail": "hello@aerovolt-athletics.com",
+    "contactPhone": "+1 (555) 019-2831",
+    "whatsappNumber": "+15550192831",
+    "deliveryInformation": "Tracked domestic delivery within 3-5 business days. Express options available at checkout.",
+    "fixedDeliveryFee": 0.0,
+    "shippingPolicy": "Dispatched within 24-48 business hours with tracking confirmation email.",
+    "returnPolicy": "30-day money-back guarantee for unused items in original packaging.",
+    "privacyPolicy": "Customer data is encrypted and used exclusively for shipment delivery fulfillment.",
+    "logoUrl": "/images/logo.jpg",
+    "coverImageUrl": "/public/images/shoes.jpg",
+    "status": "PUBLISHED",
+    "brandPersonality": [
+      "Relentless",
+      "Electric",
+      "Precision-Engineered"
+    ],
+    "detectedSubject": "Performance Athletic Running Shoes",
+    "visualStyle": "Dark-mode technical aesthetic with sharp neon green accents, minimalist studio lighting, dynamic motion photography, and high-contrast structural layouts.",
+    "featuredProductIds": [
+      "prod_aerovolt-athletics_1"
+    ],
+    "products": [
+      {
+        "id": "prod_aerovolt-athletics_1",
+        "title": "AEROVOLT Velocity Pro Engineered Mesh Running Shoes",
+        "shortDescription": "Sleek black engineered mesh running shoes with responsive white cushioning and bold neon accents.",
+        "description": "Engineered for high-mileage road runners, the AEROVOLT Velocity Pro features a breathable black upper with high-visibility neon yellow accents. The high-rebound white foam midsole provides maximum shock absorption and energetic toe-offs step after step.",
+        "price": 129.99,
+        "currency": "USD",
+        "priceType": "FIXED",
+        "category": "Footwear & Athletic Gear",
+        "type": "PHYSICAL",
+        "displayStatus": "AVAILABLE",
+        "inventory": 24,
+        "isFeatured": true,
+        "imageUrl": "/public/images/shoes.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Breathable engineered mesh upper keeps feet cool and comfortable",
+          "High-rebound thick foam midsole for optimal shock absorption",
+          "High-visibility neon accents for early morning and evening runs"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_aerovolt-athletics_1_1",
+            "title": "Size 9 / Black & Neon Yellow",
+            "price": 129.99,
+            "inventory": 10
+          },
+          {
+            "id": "var_prod_aerovolt-athletics_1_2",
+            "title": "Size 10 / Black & Neon Yellow",
+            "price": 129.99,
+            "inventory": 8
+          },
+          {
+            "id": "var_prod_aerovolt-athletics_1_3",
+            "title": "Size 11 / Black & Neon Yellow",
+            "price": 129.99,
+            "inventory": 6
+          }
+        ]
+      },
+      {
+        "id": "prod_aerovolt-athletics_2",
+        "title": "AEROVOLT UltraVent Anti-Blister Running Socks (3-Pack)",
+        "shortDescription": "Moisture-wicking, targeted-cushion performance running socks with arch support.",
+        "description": "Keep your feet dry and blister-free during intense training with AEROVOLT UltraVent Running Socks. Designed to seamlessly match AEROVOLT performance shoes, they feature targeted heel-and-toe cushioning with integrated dynamic arch bands.",
+        "price": 21.99,
+        "currency": "USD",
+        "priceType": "FIXED",
+        "category": "Footwear & Athletic Gear",
+        "type": "PHYSICAL",
+        "displayStatus": "AVAILABLE",
+        "inventory": 45,
+        "isFeatured": false,
+        "imageUrl": "/public/images/shoes.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Moisture-wicking mesh zone upper for maximum breathability",
+          "Anatomic arch band prevents sock slipping and bunching",
+          "Reinforced heel and toe padding reduces impact friction"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_aerovolt-athletics_2_1",
+            "title": "Medium (US Men's 6-9 / Women's 7-10)",
+            "price": 21.99,
+            "inventory": 25
+          },
+          {
+            "id": "var_prod_aerovolt-athletics_2_2",
+            "title": "Large (US Men's 9.5-12 / Women's 10.5-13)",
+            "price": 21.99,
+            "inventory": 20
+          }
+        ]
+      }
+    ],
+    "isProductionGenerated": true,
+    "sourceInputType": "shoes",
+    "sourceImage": "/public/images/shoes.jpg"
+  },
+  "ochre-axis": {
+    "storeId": "store_live_ochre-axis",
+    "name": "Ochre & Axis",
+    "handle": "ochre-axis",
+    "tagline": "Geometry in motion, art for your home.",
+    "description": "A curated collection of geometric abstract art pieces designed to transform modern living spaces.",
+    "story": "Ochre & Axis was born from the intersection of architectural precision and raw, emotive brushwork. We believe that every wall is a canvas waiting for a statement, bridging the gap between fine art galleries and contemporary home decor. Our mission is to bring sophisticated, textured energy into the everyday environment.",
+    "category": "Fine Art & Decor",
+    "archetype": "merch",
+    "businessMode": "MERCH",
+    "theme": "MODERN",
+    "primaryColor": "#C68E17",
+    "secondaryColor": "#002B5B",
+    "backgroundColor": "#FDFBF7",
+    "textColor": "#1A1A1A",
+    "surfaceColor": "#FFFFFF",
+    "accentColor": "#DC143C",
+    "borderColor": "#e4e4e7",
+    "fontDisplay": "\"Plus Jakarta Sans\", sans-serif",
+    "fontBody": "\"Inter\", sans-serif",
+    "currency": "USD",
+    "currencySymbol": "$",
+    "country": "US",
+    "location": "Global / Digital Warehouse",
+    "contactEmail": "hello@ochre-axis.com",
+    "contactPhone": "+1 (555) 019-2831",
+    "whatsappNumber": null,
+    "deliveryInformation": "Tracked domestic delivery within 3-5 business days. Express options available at checkout.",
+    "fixedDeliveryFee": 0.0,
+    "shippingPolicy": "Dispatched within 24-48 business hours with tracking confirmation email.",
+    "returnPolicy": "30-day money-back guarantee for unused items in original packaging.",
+    "privacyPolicy": "Customer data is encrypted and used exclusively for shipment delivery fulfillment.",
+    "logoUrl": "/images/logo.jpg",
+    "coverImageUrl": "/public/images/canvas.jpg",
+    "status": "PUBLISHED",
+    "brandPersonality": [
+      "Sophisticated",
+      "Energetic",
+      "Curated"
+    ],
+    "detectedSubject": "Abstract geometric oil painting",
+    "visualStyle": "A balance of bold, structured geometric layouts paired with organic, textured overlays that mimic oil-on-canvas depth.",
+    "featuredProductIds": [
+      "prod_ochre-axis_1"
+    ],
+    "products": [
+      {
+        "id": "prod_ochre-axis_1",
+        "title": "Ochre & Axis Geometric Oil Canvas",
+        "shortDescription": "A bold, textured statement piece for the modern home.",
+        "description": "Transform your living space with this high-quality canvas print featuring rich, abstract geometric oil textures. Designed to serve as a sophisticated focal point, it brings gallery-grade artistry directly to your walls.",
+        "price": 85.0,
+        "currency": "USD",
+        "priceType": "AI estimate",
+        "category": "Art",
+        "type": "MERCH",
+        "displayStatus": "AVAILABLE",
+        "inventory": 99,
+        "isFeatured": true,
+        "imageUrl": "/public/images/canvas.jpg",
+        "printifyBlueprint": {
+          "blueprintId": 507,
+          "blueprintTitle": "Canvas Tote Bag, 5-Color Straps",
+          "brand": "Generic brand"
+        },
+        "sellingPoints": [
+          "Gallery-quality canvas wrap",
+          "Vibrant, fade-resistant archival inks",
+          "Ready-to-hang professional finish"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_ochre-axis_1_1",
+            "title": "12x16 Inch",
+            "price": 85.0,
+            "inventory": 99
+          },
+          {
+            "id": "var_prod_ochre-axis_1_2",
+            "title": "24x36 Inch",
+            "price": 145.0,
+            "inventory": 99
+          }
+        ]
+      },
+      {
+        "id": "prod_ochre-axis_2",
+        "title": "Ochre & Axis Abstract Ceramic Mug",
+        "shortDescription": "Elevate your morning ritual with contemporary art.",
+        "description": "This ceramic mug features a wrap-around print of our signature geometric oil painting, blending functional utility with high-end aesthetic appeal. It is the perfect desk accessory for design-conscious professionals and art lovers alike.",
+        "price": 18.0,
+        "currency": "USD",
+        "priceType": "AI estimate",
+        "category": "Drinkware",
+        "type": "MERCH",
+        "displayStatus": "AVAILABLE",
+        "inventory": 99,
+        "isFeatured": false,
+        "imageUrl": "/public/images/canvas.jpg",
+        "printifyBlueprint": {
+          "blueprintId": 68,
+          "blueprintTitle": "Mug 11oz",
+          "brand": "Generic brand"
+        },
+        "sellingPoints": [
+          "Durable ceramic construction",
+          "Vivid, high-definition print quality",
+          "Microwave and dishwasher safe"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_ochre-axis_2_1",
+            "title": "11oz Standard",
+            "price": 18.0,
+            "inventory": 99
+          },
+          {
+            "id": "var_prod_ochre-axis_2_2",
+            "title": "15oz Large",
+            "price": 22.0,
+            "inventory": 99
+          }
+        ]
+      }
+    ],
+    "isProductionGenerated": true,
+    "sourceInputType": "artwork",
+    "sourceImage": "/public/images/canvas.jpg"
+  },
+  "lumina-roast": {
+    "storeId": "store_live_lumina-roast",
+    "name": "Lumina Roast",
+    "handle": "lumina-roast",
+    "tagline": "Awaken your senses with every pour.",
+    "description": "Premium single-origin coffee beans curated for the modern home barista.",
+    "story": "Born from the quiet stillness of dawn, Lumina Roast bridges the gap between artisanal craft and daily ritual. We source only the finest single-origin beans, ensuring every cup reflects our commitment to ethical transparency and unparalleled flavor profiles. Our mission is to transform your morning routine into a moment of pure, aesthetic clarity.",
+    "category": "Food & Beverage",
+    "archetype": "retail",
+    "businessMode": "REAL_SHOP",
+    "theme": "MODERN",
+    "primaryColor": "#2D2D2D",
+    "secondaryColor": "#EAEAEA",
+    "backgroundColor": "#F9F9F9",
+    "textColor": "#1A1A1A",
+    "surfaceColor": "#FFFFFF",
+    "accentColor": "#D4A373",
+    "borderColor": "#e4e4e7",
+    "fontDisplay": "\"Plus Jakarta Sans\", sans-serif",
+    "fontBody": "\"Inter\", sans-serif",
+    "currency": "USD",
+    "currencySymbol": "$",
+    "country": "US",
+    "location": "Global / Digital Warehouse",
+    "contactEmail": "hello@lumina-roast.com",
+    "contactPhone": "+1 (555) 019-2831",
+    "whatsappNumber": "+15550192831",
+    "deliveryInformation": "Tracked domestic delivery within 3-5 business days. Express options available at checkout.",
+    "fixedDeliveryFee": 0.0,
+    "shippingPolicy": "Dispatched within 24-48 business hours with tracking confirmation email.",
+    "returnPolicy": "30-day money-back guarantee for unused items in original packaging.",
+    "privacyPolicy": "Customer data is encrypted and used exclusively for shipment delivery fulfillment.",
+    "logoUrl": "/images/logo.jpg",
+    "coverImageUrl": "/public/images/coffee.jpg",
+    "status": "PUBLISHED",
+    "brandPersonality": [
+      "Minimalist",
+      "Sophisticated",
+      "Intentional"
+    ],
+    "detectedSubject": "Aurora Blend Whole Bean Coffee",
+    "visualStyle": "Clean, high-contrast minimalist aesthetic featuring negative space, organic textures like slate and stone, and soft, warm natural lighting.",
+    "featuredProductIds": [
+      "prod_lumina-roast_1"
+    ],
+    "products": [
+      {
+        "id": "prod_lumina-roast_1",
+        "title": "Lumina Roast Aurora Blend Whole Bean Coffee + Ceramic Pour-Over Dripper",
+        "shortDescription": "A premium single-origin coffee bundle paired with a minimalist ceramic dripper.",
+        "description": "Experience the bright, citrus-forward notes of our Aurora Blend, sourced from high-altitude estates. This set includes a 12oz bag of whole bean coffee and a matte-finish ceramic pour-over dripper for the perfect morning ritual.",
+        "price": 38.5,
+        "currency": "USD",
+        "priceType": "FIXED",
+        "category": "Food & Beverage",
+        "type": "PHYSICAL",
+        "displayStatus": "AVAILABLE",
+        "inventory": 42,
+        "isFeatured": true,
+        "imageUrl": "/public/images/coffee.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Single-origin beans roasted in small batches",
+          "Includes artisanal matte ceramic dripper",
+          "Minimalist eco-friendly packaging"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_lumina-roast_1_1",
+            "title": "12oz Bag + Dripper",
+            "price": 38.5,
+            "inventory": 30
+          },
+          {
+            "id": "var_prod_lumina-roast_1_2",
+            "title": "24oz Bag + Dripper",
+            "price": 52.0,
+            "inventory": 12
+          }
+        ]
+      },
+      {
+        "id": "prod_lumina-roast_2",
+        "title": "Lumina Roast Aurora Blend + Stainless Steel Burr Grinder",
+        "shortDescription": "The ultimate fresh-brew kit featuring Aurora Blend and a manual precision grinder.",
+        "description": "Unlock the full aromatic profile of Aurora Blend with this professional-grade manual burr grinder. Designed for consistency, this kit ensures your whole beans are ground to the exact texture required for your preferred brewing method.",
+        "price": 65.0,
+        "currency": "USD",
+        "priceType": "FIXED",
+        "category": "Food & Beverage",
+        "type": "PHYSICAL",
+        "displayStatus": "AVAILABLE",
+        "inventory": 15,
+        "isFeatured": false,
+        "imageUrl": "/public/images/coffee.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Freshness-focused whole bean coffee",
+          "Adjustable stainless steel burr grinder",
+          "Compact design ideal for home or travel"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_lumina-roast_2_1",
+            "title": "Full Kit",
+            "price": 65.0,
+            "inventory": 15
+          }
+        ]
+      }
+    ],
+    "isProductionGenerated": true,
+    "sourceInputType": "food/coffee",
+    "sourceImage": "/public/images/coffee.jpg"
+  },
+  "golden-hearth-goods": {
+    "storeId": "store_live_golden-hearth-goods",
+    "name": "Golden Hearth Goods",
+    "handle": "golden-hearth-goods",
+    "tagline": "Cozy moments, captured in ceramic.",
+    "description": "Artisan-inspired drinkware celebrating the bond between humans and their golden companions.",
+    "story": "Born from the quiet joy of morning coffee and the wagging tails that greet us, Golden Hearth Goods turns everyday rituals into heartwarming experiences. We blend hand-drawn artistry with high-quality ceramics to bring the warmth of your best friend into your home. Every piece is designed to be a gentle reminder of the love that makes a house a home.",
+    "category": "MERCH",
+    "archetype": "merch",
+    "businessMode": "MERCH",
+    "theme": "MODERN",
+    "primaryColor": "#D4A373",
+    "secondaryColor": "#A68A64",
+    "backgroundColor": "#FAEDCD",
+    "textColor": "#584B3D",
+    "surfaceColor": "#FEFAE0",
+    "accentColor": "#E9EDC9",
+    "borderColor": "#e4e4e7",
+    "fontDisplay": "\"Plus Jakarta Sans\", sans-serif",
+    "fontBody": "\"Inter\", sans-serif",
+    "currency": "USD",
+    "currencySymbol": "$",
+    "country": "US",
+    "location": "Global / Digital Warehouse",
+    "contactEmail": "hello@golden-hearth-goods.com",
+    "contactPhone": "+1 (555) 019-2831",
+    "whatsappNumber": null,
+    "deliveryInformation": "Tracked domestic delivery within 3-5 business days. Express options available at checkout.",
+    "fixedDeliveryFee": 0.0,
+    "shippingPolicy": "Dispatched within 24-48 business hours with tracking confirmation email.",
+    "returnPolicy": "30-day money-back guarantee for unused items in original packaging.",
+    "privacyPolicy": "Customer data is encrypted and used exclusively for shipment delivery fulfillment.",
+    "logoUrl": "/images/logo.jpg",
+    "coverImageUrl": "/public/images/dog_mug.jpg",
+    "status": "PUBLISHED",
+    "brandPersonality": [
+      "Warm",
+      "Artisanal",
+      "Comforting"
+    ],
+    "detectedSubject": "Golden Retriever illustration on a coffee mug",
+    "visualStyle": "Organic, hand-drawn illustration style paired with soft, earthy textures and a cozy, inviting aesthetic.",
+    "featuredProductIds": [
+      "prod_golden-hearth-goods_1"
+    ],
+    "products": [
+      {
+        "id": "prod_golden-hearth-goods_1",
+        "title": "Golden Hearth Retriever Ceramic Mug",
+        "shortDescription": "Warm your hands and your heart with every morning brew.",
+        "description": "This beautifully crafted ceramic mug features a warm, artistic Golden Retriever illustration, perfect for your morning coffee or evening tea. Designed to bring a cozy, rustic charm to your kitchen, it makes the ultimate gift for dog lovers.",
+        "price": 15.99,
+        "currency": "USD",
+        "priceType": "AI estimate",
+        "category": "Drinkware",
+        "type": "MERCH",
+        "displayStatus": "AVAILABLE",
+        "inventory": 99,
+        "isFeatured": true,
+        "imageUrl": "/public/images/dog_mug.jpg",
+        "printifyBlueprint": {
+          "blueprintId": 68,
+          "blueprintTitle": "Mug 11oz",
+          "brand": "Generic brand"
+        },
+        "sellingPoints": [
+          "High-quality ceramic with a glossy finish",
+          "Dishwasher and microwave safe",
+          "Warm, artistic Golden Retriever illustration"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_golden-hearth-goods_1_1",
+            "title": "11oz",
+            "price": 15.99,
+            "inventory": 99
+          },
+          {
+            "id": "var_prod_golden-hearth-goods_1_2",
+            "title": "15oz",
+            "price": 18.99,
+            "inventory": 99
+          }
+        ]
+      },
+      {
+        "id": "prod_golden-hearth-goods_2",
+        "title": "Golden Hearth Retriever Gallery Canvas",
+        "shortDescription": "Bring the warm, loyal spirit of a Golden Retriever into your living space.",
+        "description": "This high-quality gallery-wrapped canvas showcases a stunning, cozy illustration of a Golden Retriever that radiates love and warmth. Perfect for adding an artistic, dog-friendly touch to your living room, office, or entryway.",
+        "price": 39.99,
+        "currency": "USD",
+        "priceType": "AI estimate",
+        "category": "Art",
+        "type": "MERCH",
+        "displayStatus": "AVAILABLE",
+        "inventory": 99,
+        "isFeatured": false,
+        "imageUrl": "/public/images/dog_mug.jpg",
+        "printifyBlueprint": {
+          "blueprintId": 507,
+          "blueprintTitle": "Canvas Tote Bag, 5-Color Straps",
+          "brand": "Generic brand"
+        },
+        "sellingPoints": [
+          "Acid-free, archival-quality gicl\u00e9e print",
+          "Sturdy wooden frame construction",
+          "Ready to hang with pre-installed hardware"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_golden-hearth-goods_2_1",
+            "title": "12\" x 12\"",
+            "price": 39.99,
+            "inventory": 99
+          },
+          {
+            "id": "var_prod_golden-hearth-goods_2_2",
+            "title": "16\" x 16\"",
+            "price": 49.99,
+            "inventory": 99
+          }
+        ]
+      },
+      {
+        "id": "prod_golden-hearth-goods_3",
+        "title": "Golden Hearth Retriever Cozy Crewneck",
+        "shortDescription": "Wrap yourself in the cozy warmth of your favorite loyal companion.",
+        "description": "Crafted from an ultra-soft cotton blend, this crewneck sweatshirt features our signature artistic Golden Retriever illustration. It is the perfect layer for chilly morning walks, cozy coffee shop visits, or relaxing at home.",
+        "price": 42.0,
+        "currency": "USD",
+        "priceType": "AI estimate",
+        "category": "Apparel",
+        "type": "MERCH",
+        "displayStatus": "AVAILABLE",
+        "inventory": 99,
+        "isFeatured": false,
+        "imageUrl": "/public/images/dog_mug.jpg",
+        "printifyBlueprint": null,
+        "sellingPoints": [
+          "Ultra-soft cotton-polyester blend",
+          "Unisex fit perfect for daily wear",
+          "Durable, vibrant print that lasts through washes"
+        ],
+        "variants": [
+          {
+            "id": "var_prod_golden-hearth-goods_3_1",
+            "title": "Small / Oatmeal",
+            "price": 42.0,
+            "inventory": 99
+          },
+          {
+            "id": "var_prod_golden-hearth-goods_3_2",
+            "title": "Medium / Oatmeal",
+            "price": 42.0,
+            "inventory": 99
+          },
+          {
+            "id": "var_prod_golden-hearth-goods_3_3",
+            "title": "Large / Oatmeal",
+            "price": 44.0,
+            "inventory": 99
+          }
+        ]
+      }
+    ],
+    "isProductionGenerated": true,
+    "sourceInputType": "pet-related",
+    "sourceImage": "/public/images/dog_mug.jpg"
+  }
+}
