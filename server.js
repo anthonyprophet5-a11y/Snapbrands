@@ -7,7 +7,7 @@ const path = require('node:path');
 const { STORES, getStoreByHandle, getAllStores, db } = require('./web/data/stores');
 const paystack = require('./web/payment/paystack');
 
-const PORT = process.env.DEFAULT_APP_PORT || 3000;
+const PORT = process.env.PORT || process.env.DEFAULT_APP_PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // MIME types
@@ -1706,7 +1706,16 @@ const server = http.createServer(async (req, res) => {
               db.updateOrderPaystackRef(confirmedOrder.orderReference, paystackRef);
             }
 
-            const origin = `http://${req.headers.host || 'localhost:3000'}`;
+            const protocol =
+              req.headers['x-forwarded-proto'] ||
+              (req.socket.encrypted ? 'https' : 'http');
+
+            const host =
+              req.headers['x-forwarded-host'] ||
+              req.headers.host ||
+              'snapbrand.site';
+
+            const origin = `${protocol}://${host}`;
             const callbackUrl = `${origin}/checkout/callback`;
 
             // If Paystack is configured, attempt transaction initialization
@@ -1875,7 +1884,16 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const origin = `http://${req.headers.host || 'localhost:3000'}`;
+        const protocol =
+          req.headers['x-forwarded-proto'] ||
+          (req.socket.encrypted ? 'https' : 'http');
+
+        const host =
+          req.headers['x-forwarded-host'] ||
+          req.headers.host ||
+          'snapbrand.site';
+
+        const origin = `${protocol}://${host}`;
         const callbackUrl = `${origin}/checkout/callback`;
 
         const initRes = await paystack.initializeTransaction({
