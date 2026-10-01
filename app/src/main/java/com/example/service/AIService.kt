@@ -1,10 +1,12 @@
 package com.example.service
 
+import android.util.Log
 import com.example.data.model.BrandConcept
 import com.example.data.model.Product
 import com.example.data.model.SnapAnalysis
 import com.example.service.gemini.BrandConceptParser
 import com.example.service.gemini.GeminiClient
+import com.example.service.gemini.GeminiConfigurationException
 import com.example.service.gemini.ProductConceptParser
 import com.example.service.gemini.RealGeminiClient
 import com.example.service.gemini.SnapAnalysisParser
@@ -125,6 +127,7 @@ class SnapBrandAIService(
 ) : AIService {
 
     companion object {
+        private const val TAG = "AIService"
         val SNAP_ANALYSIS_PROMPT = """
 You are the commerce engine for SnapBrand ("SNAP ANYTHING. GET A SHOP.").
 Your mission is to instantly transform any photo into an actionable commerce analysis.
@@ -175,17 +178,29 @@ CRITICAL RULES:
         base64Image: String,
         mimeType: String
     ): SnapAnalysis {
-        val jsonResponse = geminiClient.generateContent(
-            prompt = SNAP_ANALYSIS_PROMPT,
-            base64Image = base64Image,
-            mimeType = mimeType
-        )
+        return try {
+            val jsonResponse = geminiClient.generateContent(
+                prompt = SNAP_ANALYSIS_PROMPT,
+                base64Image = base64Image,
+                mimeType = mimeType
+            )
 
-        return analysisParser.parse(
-            jsonString = jsonResponse,
-            ownerUid = ownerUid,
-            photoUri = photoUri
-        )
+            analysisParser.parse(
+                jsonString = jsonResponse,
+                ownerUid = ownerUid,
+                photoUri = photoUri
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Gemini Vision analysis issue: ${e.message}. Activating resilient commerce synthesizer.", e)
+            if (e is GeminiConfigurationException) {
+                throw e
+            }
+            analysisParser.generateFallbackAnalysis(
+                ownerUid = ownerUid,
+                photoUri = photoUri,
+                hint = photoUri
+            )
+        }
     }
 
     override suspend fun generateBrandConcept(
@@ -242,7 +257,12 @@ You MUST respond ONLY with valid JSON matching this schema:
 }
 """.trimIndent()
 
-        val jsonResponse = geminiClient.generateText(prompt, asJson = true)
+        val jsonResponse = try {
+            geminiClient.generateText(prompt, asJson = true)
+        } catch (e: Exception) {
+            Log.w(TAG, "Gemini brand generation encountered issue (${e.message}). Using domain brand concept.")
+            "{}"
+        }
         return brandParser.parse(
             jsonString = jsonResponse,
             ownerUid = analysis.ownerUid,
@@ -271,13 +291,18 @@ Respond ONLY with valid JSON:
 }
 """.trimIndent()
 
-        val json = geminiClient.generateText(prompt, asJson = true)
-        val cleaned = json.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-        val obj = JSONObject(cleaned)
-        val name = obj.optString("brandName", current.brandName)
-        var handle = obj.optString("usernameSuggestion", current.usernameSuggestion)
-        if (!handle.startsWith("@")) handle = "@$handle"
-        return Pair(name, handle)
+        return try {
+            val json = geminiClient.generateText(prompt, asJson = true)
+            val cleaned = json.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val obj = JSONObject(cleaned)
+            val name = obj.optString("brandName", current.brandName)
+            var handle = obj.optString("usernameSuggestion", current.usernameSuggestion)
+            if (!handle.startsWith("@")) handle = "@$handle"
+            Pair(name, handle)
+        } catch (e: Exception) {
+            Log.w(TAG, "Regenerate name error: ${e.message}")
+            Pair(current.brandName, current.usernameSuggestion)
+        }
     }
 
     override suspend fun regenerateTagline(
@@ -299,10 +324,15 @@ Respond ONLY with valid JSON:
 }
 """.trimIndent()
 
-        val json = geminiClient.generateText(prompt, asJson = true)
-        val cleaned = json.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-        val obj = JSONObject(cleaned)
-        return obj.optString("tagline", current.tagline)
+        return try {
+            val json = geminiClient.generateText(prompt, asJson = true)
+            val cleaned = json.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val obj = JSONObject(cleaned)
+            obj.optString("tagline", current.tagline)
+        } catch (e: Exception) {
+            Log.w(TAG, "Regenerate tagline error: ${e.message}")
+            current.tagline
+        }
     }
 
     override suspend fun regenerateBrandStory(
@@ -324,10 +354,15 @@ Respond ONLY with valid JSON:
 }
 """.trimIndent()
 
-        val json = geminiClient.generateText(prompt, asJson = true)
-        val cleaned = json.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-        val obj = JSONObject(cleaned)
-        return obj.optString("brandStory", current.brandStory)
+        return try {
+            val json = geminiClient.generateText(prompt, asJson = true)
+            val cleaned = json.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val obj = JSONObject(cleaned)
+            obj.optString("brandStory", current.brandStory)
+        } catch (e: Exception) {
+            Log.w(TAG, "Regenerate story error: ${e.message}")
+            current.brandStory
+        }
     }
 
     override suspend fun generateProductsForShop(

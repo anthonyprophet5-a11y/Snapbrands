@@ -47,10 +47,6 @@ class RealGeminiClient(
             )
         }
 
-        val apiKey = GeminiConfig.getApiKey()
-        val url = "${GeminiConfig.API_ENDPOINT}?key=$apiKey"
-
-        // Build Gemini 3.5 Flash JSON Payload
         val payload = JSONObject().apply {
             val contentsArray = JSONArray().apply {
                 val contentObj = JSONObject().apply {
@@ -80,7 +76,34 @@ class RealGeminiClient(
             })
         }
 
-        executeGeminiRequest(url, payload)
+        val models = GeminiConfig.FALLBACK_MODELS
+        var lastException: Exception? = null
+
+        for (model in models) {
+            val endpoint = GeminiConfig.getEndpointForModel(model)
+            val apiKey = GeminiConfig.getApiKey()
+            val url = "$endpoint?key=$apiKey"
+
+            try {
+                Log.d(TAG, "Attempting Gemini request with model: $model")
+                return@withContext executeGeminiRequest(url, payload, retriesLeft = 1)
+            } catch (e: GeminiConfigurationException) {
+                Log.e(TAG, "API key configuration issue for model $model: ${e.message}", e)
+                lastException = e
+                break // Don't retry other models if API key is invalid/unauthorized
+            } catch (e: GeminiRateLimitException) {
+                Log.w(TAG, "Model $model was rate-limited / quota-exhausted (429): ${e.message}. Trying fallback model...", e)
+                lastException = e
+            } catch (e: GeminiUnavailableException) {
+                Log.w(TAG, "Model $model was unavailable (503/500). Trying fallback model...", e)
+                lastException = e
+            } catch (e: Exception) {
+                Log.w(TAG, "Model $model request failed: ${e.message}. Trying fallback model...", e)
+                lastException = e
+            }
+        }
+
+        throw lastException ?: GeminiUnavailableException("Gemini is temporarily unavailable. Please try again.")
     }
 
     override suspend fun generateText(
@@ -93,9 +116,6 @@ class RealGeminiClient(
                 "Gemini API key is not configured. Please add your GEMINI_API_KEY in the AI Studio Secrets panel."
             )
         }
-
-        val apiKey = GeminiConfig.getApiKey()
-        val url = "${GeminiConfig.API_ENDPOINT}?key=$apiKey"
 
         val payload = JSONObject().apply {
             val contentsArray = JSONArray().apply {
@@ -120,7 +140,34 @@ class RealGeminiClient(
             put("generationConfig", genConfig)
         }
 
-        executeGeminiRequest(url, payload)
+        val models = GeminiConfig.FALLBACK_MODELS
+        var lastException: Exception? = null
+
+        for (model in models) {
+            val endpoint = GeminiConfig.getEndpointForModel(model)
+            val apiKey = GeminiConfig.getApiKey()
+            val url = "$endpoint?key=$apiKey"
+
+            try {
+                Log.d(TAG, "Attempting Gemini text request with model: $model")
+                return@withContext executeGeminiRequest(url, payload, retriesLeft = 1)
+            } catch (e: GeminiConfigurationException) {
+                Log.e(TAG, "API key configuration issue for model $model: ${e.message}", e)
+                lastException = e
+                break // Don't retry other models if API key is invalid
+            } catch (e: GeminiRateLimitException) {
+                Log.w(TAG, "Model $model text rate-limited / quota-exhausted (429): ${e.message}. Trying fallback model...", e)
+                lastException = e
+            } catch (e: GeminiUnavailableException) {
+                Log.w(TAG, "Model $model text unavailable (503/500). Trying fallback model...", e)
+                lastException = e
+            } catch (e: Exception) {
+                Log.w(TAG, "Model $model text request failed: ${e.message}. Trying fallback model...", e)
+                lastException = e
+            }
+        }
+
+        throw lastException ?: GeminiUnavailableException("Gemini is temporarily unavailable. Please try again.")
     }
 
     private fun executeGeminiRequest(url: String, payload: JSONObject, retriesLeft: Int = 1): String {
@@ -141,31 +188,42 @@ class RealGeminiClient(
                 Log.d(TAG, "Gemini API HTTP Response code: $code")
 
                 if (!response.isSuccessful) {
+                    val snippet = responseBody.take(300).replace("\n", " ")
                     when (code) {
                         401, 403 -> {
-                            Log.e(TAG, "Gemini Auth failure (HTTP $code)")
+                            Log.e(TAG, "Gemini Auth failure (HTTP $code): $snippet")
                             throw GeminiConfigurationException(
-                                "AI configuration needs attention."
+                                "Gemini API authentication failed (HTTP $code): $snippet"
                             )
                         }
                         429 -> {
-                            Log.w(TAG, "Gemini Rate Limit (HTTP 429)")
-                            throw GeminiRateLimitException(
-                                "AI is temporarily busy. Please try again shortly."
+                            Log.w(TAG, "Gemini Rate Limit / Quota Exceeded (HTTP 429): $snippet")
+                            val isQuota = snippet.contains("quota", ignoreCase = true) || snippet.contains("resource_exhausted", ignoreCase = true)
+                            val userMsg = if (isQuota) {
+                                "Gemini token quota exceeded for current model (RESOURCE_EXHAUSTED). Trying next available model..."
+                            } else {
+                                "AI is temporarily busy (HTTP 429). Retrying with fallback model..."
+                            }
+                            throw GeminiRateLimitException(userMsg)
+                        }
+                        404 -> {
+                            Log.w(TAG, "Gemini Model Not Found (HTTP 404): $snippet")
+                            throw GeminiInvalidRequestException(
+                                "Gemini model endpoint not found (HTTP 404): $snippet"
                             )
                         }
                         400, 422 -> {
-                            Log.e(TAG, "Gemini Invalid Request (HTTP $code)")
+                            Log.e(TAG, "Gemini Invalid Request (HTTP $code): $snippet")
                             throw GeminiInvalidRequestException(
-                                "SnapBrand couldn't process this image."
+                                "SnapBrand request rejected by model (HTTP $code): $snippet"
                             )
                         }
                         500, 502, 503, 504 -> {
-                            Log.e(TAG, "Gemini Server error (HTTP $code)")
+                            Log.e(TAG, "Gemini Server error (HTTP $code): $snippet")
                             if (retriesLeft > 0) {
                                 Log.w(TAG, "Retrying Gemini request after transient HTTP $code")
                                 try {
-                                    Thread.sleep(600)
+                                    Thread.sleep(800)
                                 } catch (_: InterruptedException) {}
                                 return executeGeminiRequest(url, payload, retriesLeft - 1)
                             }
@@ -174,7 +232,7 @@ class RealGeminiClient(
                             )
                         }
                         else -> {
-                            Log.e(TAG, "Gemini API Error (HTTP $code)")
+                            Log.e(TAG, "Gemini API Error (HTTP $code): $snippet")
                             if (code in 400..499) {
                                 throw GeminiInvalidRequestException(
                                     "SnapBrand couldn't process this image."

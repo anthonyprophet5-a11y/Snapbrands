@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { STORES, getStoreByHandle, getAllStores, db } = require('./web/data/stores');
 const paystack = require('./web/payment/paystack');
+const storeGenerator = require('./web/ai/store_generator');
 
 const PORT = process.env.PORT || process.env.DEFAULT_APP_PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -110,8 +111,8 @@ function escapeHtml(str) {
 // 1. MARKETING HOMEPAGE VIEW
 // ---------------------------------------------------------------------------
 
-function renderMarketingHomepage() {
-  const stores = getAllStores();
+async function renderMarketingHomepage() {
+  const stores = await getAllStores();
 
   const bodyContent = `
   <!-- Navigation Header -->
@@ -195,6 +196,19 @@ function renderMarketingHomepage() {
           determines the visual architecture, and generates an authentic storefront.
         </p>
 
+        <!-- Creator Upload & Prompt Bar -->
+        <div class="creator-upload-bar" style="margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--neutral-100,#f4f4f5);padding:14px 18px;border-radius:12px;border:1px solid #e4e4e7;">
+          <input type="file" id="user-snap-file" accept="image/*" style="display:none;">
+          <button type="button" class="btn btn-primary" id="btn-trigger-upload" style="background:#09090b;color:#fff;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Upload / Snap Photo
+          </button>
+          <input type="text" id="user-snap-directive" placeholder="Custom directive (e.g. Minimalist running store, Luxury street drop)..." style="flex:1;min-width:220px;padding:10px 14px;border:1px solid #d4d4d8;border-radius:8px;font-size:0.875rem;">
+          <button type="button" class="btn btn-primary" id="btn-generate-ai-store" style="background:#2563eb;color:#fff;font-weight:700;">
+            ⚡ Generate Live Store with AI
+          </button>
+        </div>
+
         <!-- Snap Selector Pills -->
         <div class="snap-picker">
           <button type="button" class="snap-pill-btn active" data-snap-key="headset">
@@ -217,6 +231,10 @@ function renderMarketingHomepage() {
             <img src="/images/coffee.jpg" alt="Coffee">
             Specialty Coffee
           </button>
+          <button type="button" class="snap-pill-btn" data-snap-key="shoes">
+            <img src="/images/shoes.jpg" alt="Shoes">
+            Running Shoes
+          </button>
         </div>
 
         <!-- Demonstration Canvas -->
@@ -227,6 +245,14 @@ function renderMarketingHomepage() {
               <div class="ai-scan-overlay">
                 <span class="ai-scan-dot"></span>
                 AI Vision Analysis
+              </div>
+            </div>
+
+            <!-- AI Generation Status Banner -->
+            <div id="ai-generation-status" style="display:none;margin-top:12px;padding:12px;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:0.875rem;font-weight:600;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:16px;height:16px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                <span id="ai-status-text">Analyzing photo with Gemini Vision...</span>
               </div>
             </div>
 
@@ -1592,8 +1618,8 @@ const server = http.createServer(async (req, res) => {
 
   // CORS headers for APIs
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-seller-uid');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -1605,6 +1631,80 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/health' || pathname === '/api/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }));
+    return;
+  }
+
+  // API: AI Photo -> Real E-Commerce Store Generator (Full Pipeline + Supabase PostgreSQL Persistence)
+  if ((pathname === '/api/generate-store' || pathname === '/api/snap' || pathname === '/api/stores/generate') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk;
+      // Allow up to 25MB for high-resolution images
+      if (body.length > 25 * 1024 * 1024) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Uploaded photo is too large (max 25MB).', code: 'PAYLOAD_TOO_LARGE' }));
+        req.destroy();
+      }
+    });
+
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const imageBase64 = payload.image || payload.imageBase64 || payload.photoBase64 || null;
+        const imagePath = payload.imagePath || null;
+        const mimeType = payload.mimeType || 'image/jpeg';
+        const userDirective = payload.directive || payload.userDirective || '';
+        const sellerUid = req.headers['x-seller-uid'] || payload.ownerUid || payload.sellerUid || null;
+
+        if (!imageBase64 && !imagePath) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: false,
+            error: 'An image (base64 or imagePath) is required to generate an e-commerce storefront.',
+            code: 'MISSING_IMAGE'
+          }));
+          return;
+        }
+
+        console.log('[SnapBrand AI Server] Processing store generation request. Directive:', userDirective || '(none)');
+        const result = await storeGenerator.generateStoreFromImage({
+          imageBase64,
+          mimeType,
+          imagePath,
+          userDirective,
+          ownerUid: sellerUid
+        });
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({
+          success: true,
+          store: result.store,
+          products: result.products,
+          storefrontUrl: result.storefrontUrl,
+          modelUsed: result.modelUsed,
+          message: `E-commerce storefront @${result.store.handle} created and published to database.`
+        }));
+      } catch (err) {
+        console.error('[SnapBrand AI Server] Store generation error:', err);
+        const isAuthError = err.code === 'CONFIG_MISSING_API_KEY' || err.code === 'AUTH_ERROR';
+        const statusCode = isAuthError ? 503 : (err.code === 'RATE_LIMIT' || err.code === 'HIGH_DEMAND' ? 503 : 400);
+
+        res.writeHead(statusCode, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({
+          success: false,
+          error: isAuthError
+            ? 'AI service is temporarily unconfigured on this deployment. Please verify GEMINI_API_KEY is configured in Render environment variables.'
+            : (err.message || 'AI service encountered an issue generating this storefront.'),
+          code: err.code || 'GENERATION_ERROR'
+        }));
+      }
+    });
     return;
   }
 
@@ -1623,7 +1723,7 @@ const server = http.createServer(async (req, res) => {
 
   // API: Get all stores
   if (pathname === '/api/stores' && (req.method === 'GET' || req.method === 'HEAD')) {
-    const stores = getAllStores().map(s => ({
+    const stores = (await getAllStores()).map(s => ({
       id: s.storeId,
       handle: s.handle,
       name: s.name,
@@ -1647,7 +1747,7 @@ const server = http.createServer(async (req, res) => {
   // API: Get specific storefront
   if (pathname.startsWith('/api/storefront/') && (req.method === 'GET' || req.method === 'HEAD')) {
     const handle = pathname.replace('/api/storefront/', '').replace(/^@/, '');
-    const store = getStoreByHandle(handle);
+    const store = await getStoreByHandle(handle);
     if (!store) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Storefront not found' }));
@@ -1686,14 +1786,14 @@ const server = http.createServer(async (req, res) => {
 
         // Resolve storeId if handle was provided
         let effectiveStoreId = storeId;
-        const matchedStore = getStoreByHandle(storeId);
+        const matchedStore = await getStoreByHandle(storeId);
         if (matchedStore) {
           effectiveStoreId = matchedStore.storeId;
         }
 
         if (db && typeof db.createOrder === 'function' && effectiveStoreId) {
           try {
-            const confirmedOrder = db.createOrder({
+            const confirmedOrder = await db.createOrder({
               storeId: effectiveStoreId,
               customer,
               items,
@@ -1703,7 +1803,7 @@ const server = http.createServer(async (req, res) => {
             // Generate unique Paystack reference
             const paystackRef = `ps_${confirmedOrder.orderReference}_${Date.now()}`;
             if (typeof db.updateOrderPaystackRef === 'function') {
-              db.updateOrderPaystackRef(confirmedOrder.orderReference, paystackRef);
+              await db.updateOrderPaystackRef(confirmedOrder.orderReference, paystackRef);
             }
 
             const protocol =
@@ -1736,7 +1836,7 @@ const server = http.createServer(async (req, res) => {
                 });
 
                 if (typeof db.updatePaymentStatus === 'function') {
-                  db.updatePaymentStatus(confirmedOrder.orderReference, 'PENDING', {
+                  await db.updatePaymentStatus(confirmedOrder.orderReference, 'PENDING', {
                     paystackReference: paystackRef,
                     metadata: initRes.data
                   });
@@ -1843,14 +1943,14 @@ const server = http.createServer(async (req, res) => {
         let order = null;
 
         if (payload.orderReference) {
-          order = db.getOrderByReference(payload.orderReference);
+          order = await db.getOrderByReference(payload.orderReference);
           if (!order) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: false, error: 'Order not found for initialization.' }));
             return;
           }
         } else if (payload.storeId && payload.customer && payload.items) {
-          order = db.createOrder(payload);
+          order = await db.createOrder(payload);
         } else {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: false, error: 'Either orderReference or full order payload is required.' }));
@@ -1865,7 +1965,7 @@ const server = http.createServer(async (req, res) => {
 
         const paystackRef = order.paystackReference || `ps_${order.reference}_${Date.now()}`;
         if (!order.paystackReference && typeof db.updateOrderPaystackRef === 'function') {
-          db.updateOrderPaystackRef(order.reference, paystackRef);
+          await db.updateOrderPaystackRef(order.reference, paystackRef);
         }
 
         if (!paystack.isConfigured()) {
@@ -1910,7 +2010,7 @@ const server = http.createServer(async (req, res) => {
           }
         });
 
-        db.updatePaymentStatus(order.reference, 'PENDING', {
+        await db.updatePaymentStatus(order.reference, 'PENDING', {
           paystackReference: paystackRef,
           metadata: initRes.data
         });
@@ -1944,8 +2044,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const order = (db && typeof db.getOrderByPaystackReference === 'function' ? db.getOrderByPaystackReference(rawRef) : null)
-      || (db && typeof db.getOrderByReference === 'function' ? db.getOrderByReference(rawRef) : null);
+    const order = (db && typeof db.getOrderByPaystackReference === 'function' ? await db.getOrderByPaystackReference(rawRef) : null)
+      || (db && typeof db.getOrderByReference === 'function' ? await db.getOrderByReference(rawRef) : null);
 
     if (!order) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -1989,7 +2089,7 @@ const server = http.createServer(async (req, res) => {
         // Strict minor-unit amount verification
         const expectedMinor = paystack.toMinorUnits(order.totalAmount);
         if (data.amount !== expectedMinor) {
-          db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
+          await db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             success: false,
@@ -2001,7 +2101,7 @@ const server = http.createServer(async (req, res) => {
 
         // Strict currency verification
         if (data.currency.toUpperCase() !== order.currency.toUpperCase()) {
-          db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
+          await db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             success: false,
@@ -2012,7 +2112,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         // Authorized: Transition to PAID
-        const updated = db.updatePaymentStatus(order.reference, 'PAID', {
+        const updated = await db.updatePaymentStatus(order.reference, 'PAID', {
           channel: data.channel,
           paidAt: data.paid_at,
           metadata: data
@@ -2033,7 +2133,7 @@ const server = http.createServer(async (req, res) => {
         }));
         return;
       } else if (data.status === 'failed') {
-        db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
+        await db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: false,
@@ -2042,7 +2142,7 @@ const server = http.createServer(async (req, res) => {
         }));
         return;
       } else if (data.status === 'abandoned') {
-        db.updatePaymentStatus(order.reference, 'CANCELLED');
+        await db.updatePaymentStatus(order.reference, 'CANCELLED');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: false,
@@ -2069,7 +2169,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/paystack/webhook' && req.method === 'POST') {
     let rawBody = '';
     req.on('data', chunk => { rawBody += chunk; });
-    req.on('end', () => {
+    req.on('end', async () => {
       const signature = req.headers['x-paystack-signature'];
       if (!signature) {
         res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -2093,7 +2193,7 @@ const server = http.createServer(async (req, res) => {
 
         // Idempotency check: record event in SQLite
         if (db && typeof db.recordWebhookEvent === 'function') {
-          const rec = db.recordWebhookEvent(eventId, event, data.reference, data.status, eventData);
+          const rec = await db.recordWebhookEvent(eventId, event, data.reference, data.status, eventData);
           if (rec.alreadyProcessed) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: true, message: 'Event already processed (idempotent)' }));
@@ -2103,19 +2203,19 @@ const server = http.createServer(async (req, res) => {
 
         // Handle successful charge event
         if (event === 'charge.success' && data.reference) {
-          const order = (db.getOrderByPaystackReference && db.getOrderByPaystackReference(data.reference))
-            || (db.getOrderByReference && db.getOrderByReference(data.reference));
+          const order = (db.getOrderByPaystackReference && await db.getOrderByPaystackReference(data.reference))
+            || (db.getOrderByReference && await db.getOrderByReference(data.reference));
 
           if (order) {
             const expectedMinor = paystack.toMinorUnits(order.totalAmount);
             if (data.amount === expectedMinor && data.currency.toUpperCase() === order.currency.toUpperCase()) {
-              db.updatePaymentStatus(order.reference, 'PAID', {
+              await db.updatePaymentStatus(order.reference, 'PAID', {
                 channel: data.channel,
                 paidAt: data.paid_at,
                 metadata: data
               });
             } else {
-              db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
+              await db.updatePaymentStatus(order.reference, 'FAILED', { channel: data.channel });
             }
           }
         }
@@ -2142,8 +2242,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    let order = (db && typeof db.getOrderByPaystackReference === 'function' ? db.getOrderByPaystackReference(ref) : null)
-      || (db && typeof db.getOrderByReference === 'function' ? db.getOrderByReference(ref) : null);
+    let order = (db && typeof db.getOrderByPaystackReference === 'function' ? await db.getOrderByPaystackReference(ref) : null)
+      || (db && typeof db.getOrderByReference === 'function' ? await db.getOrderByReference(ref) : null);
 
     if (!order) {
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -2154,7 +2254,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const store = getStoreByHandle(order.storeId) || getAllStores().find(s => s.storeId === order.storeId);
+    const store = (await getStoreByHandle(order.storeId)) || (await getAllStores()).find(s => s.storeId === order.storeId);
 
     // If order is already verified as PAID, render success directly
     if (order.paymentStatus === 'PAID') {
@@ -2166,12 +2266,12 @@ const server = http.createServer(async (req, res) => {
     // If Paystack is configured, attempt authoritative verification
     if (paystack.isConfigured()) {
       paystack.verifyTransaction(order.paystackReference || ref)
-        .then(verifyRes => {
+        .then(async verifyRes => {
           const data = verifyRes.data;
           if (verifyRes.status === true && data.status === 'success') {
             const expectedMinor = paystack.toMinorUnits(order.totalAmount);
             if (data.amount === expectedMinor && data.currency.toUpperCase() === order.currency.toUpperCase()) {
-              const updated = db.updatePaymentStatus(order.reference, 'PAID', {
+              const updated = await db.updatePaymentStatus(order.reference, 'PAID', {
                 channel: data.channel,
                 paidAt: data.paid_at,
                 metadata: data
@@ -2182,7 +2282,7 @@ const server = http.createServer(async (req, res) => {
             }
           }
 
-          const failedOrder = db.updatePaymentStatus(order.reference, 'FAILED', { channel: data?.channel });
+          const failedOrder = await db.updatePaymentStatus(order.reference, 'FAILED', { channel: data?.channel });
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(renderCustomerPaymentResultView({
             order: failedOrder,
@@ -2219,7 +2319,7 @@ const server = http.createServer(async (req, res) => {
     const ref = pathname.replace('/api/orders/', '').replace('/cancel', '').trim();
     if (db && typeof db.updatePaymentStatus === 'function') {
       try {
-        const updated = db.updatePaymentStatus(ref, 'CANCELLED');
+        const updated = await db.updatePaymentStatus(ref, 'CANCELLED');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
@@ -2239,7 +2339,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname.startsWith('/api/orders/') && (req.method === 'GET' || req.method === 'HEAD')) {
     const ref = pathname.replace('/api/orders/', '').trim();
     if (db && typeof db.getOrderByReference === 'function') {
-      const order = db.getOrderByReference(ref);
+      const order = await db.getOrderByReference(ref);
       if (order) {
         // Return sanitized order view (excluding seller internal credentials)
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -2286,7 +2386,7 @@ const server = http.createServer(async (req, res) => {
 
     if (db && typeof db.getSellerOrders === 'function') {
       // Strictly enforces sellerUid owns this store
-      const orders = db.getSellerOrders(storeId, sellerUid, statusFilter);
+      const orders = await db.getSellerOrders(storeId, sellerUid, statusFilter);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ orders }));
       return;
@@ -2301,13 +2401,13 @@ const server = http.createServer(async (req, res) => {
   const sellerOrdersMatch = pathname.match(/^\/@?([a-zA-Z0-9_-]+)\/orders$/);
   if (sellerOrdersMatch && req.method === 'GET') {
     const handle = sellerOrdersMatch[1];
-    const store = getStoreByHandle(handle);
+    const store = await getStoreByHandle(handle);
 
     if (store && db && typeof db.getSellerOrders === 'function') {
-      const rawStore = typeof db.getStoreByHandleRaw === 'function' ? db.getStoreByHandleRaw(handle) : null;
+      const rawStore = typeof db.getStoreByHandleRaw === 'function' ? await db.getStoreByHandleRaw(handle) : null;
       const ownerUid = (rawStore && rawStore.ownerUid) || store.ownerUid || 'seller_' + handle;
       const statusFilter = parsedUrl.searchParams.get('status') || 'ALL';
-      const orders = db.getSellerOrders(store.storeId || store.id, ownerUid, statusFilter);
+      const orders = await db.getSellerOrders(store.storeId || store.id, ownerUid, statusFilter);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(renderSellerOrdersDashboard({ store, orders, currentFilter: statusFilter.toUpperCase() }));
       return;
@@ -2317,7 +2417,7 @@ const server = http.createServer(async (req, res) => {
   // Route: Main Marketing Homepage (/)
   if (pathname === '/' || pathname === '/index.html') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(renderMarketingHomepage());
+    res.end(await renderMarketingHomepage());
     return;
   }
 
@@ -2326,7 +2426,7 @@ const server = http.createServer(async (req, res) => {
   if (pdpMatch) {
     const handle = pdpMatch[1];
     const productId = pdpMatch[2];
-    const store = getStoreByHandle(handle);
+    const store = await getStoreByHandle(handle);
 
     if (store) {
       const product = store.products.find(p => p.id === productId);
@@ -2342,7 +2442,7 @@ const server = http.createServer(async (req, res) => {
   const storeMatch = pathname.match(/^\/@?([a-zA-Z0-9_-]+)$/);
   if (storeMatch) {
     const handle = storeMatch[1];
-    const store = getStoreByHandle(handle);
+    const store = await getStoreByHandle(handle);
 
     if (store) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });

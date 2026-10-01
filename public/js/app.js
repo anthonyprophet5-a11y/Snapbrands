@@ -80,12 +80,36 @@
       heroLayout: 'Warm Sensory Grid with Tasting Notes Wheel',
       price: '$21.00',
       heroProduct: 'Single-Origin Yirgacheffe Washed Heirloom'
+    },
+    'shoes': {
+      title: 'Performance Road Running Shoes',
+      image: '/images/shoes.jpg',
+      category: 'Footwear & Athletics',
+      archetype: 'Fashion (Editorial & Lookbook)',
+      businessMode: 'REAL_SHOP (Physical Inventory)',
+      brandName: 'Aether Athletics',
+      handle: 'aether-athletics',
+      tagline: 'Precision Engineered Footwear for Everyday Pace',
+      palette: ['#09090B', '#2563EB', '#52525B', '#FAFAFA'],
+      fontPairing: 'Plus Jakarta Sans + Inter',
+      heroLayout: 'Editorial Athletic Lookbook with Kinetic Grid',
+      price: '$159.00',
+      heroProduct: 'Aether Pace Pro Road Running Sneakers'
     }
   };
 
   function initSnapDemo() {
     const snapBtns = document.querySelectorAll('[data-snap-key]');
-    if (!snapBtns.length) return;
+    const fileInput = document.getElementById('user-snap-file');
+    const triggerUploadBtn = document.getElementById('btn-trigger-upload');
+    const generateAiBtn = document.getElementById('btn-generate-ai-store');
+    const directiveInput = document.getElementById('user-snap-directive');
+    const statusBanner = document.getElementById('ai-generation-status');
+    const statusText = document.getElementById('ai-status-text');
+
+    let currentPhotoBase64 = null;
+    let currentPhotoMime = 'image/jpeg';
+    let currentPresetKey = 'headset';
 
     const snapPhoto = document.getElementById('demo-snap-photo');
     const snapSubject = document.getElementById('demo-subject');
@@ -107,6 +131,8 @@
     const previewImg = document.getElementById('demo-preview-img');
 
     function updateDemo(key) {
+      currentPresetKey = key;
+      currentPhotoBase64 = null;
       const data = DEMO_SNAPS[key];
       if (!data) return;
 
@@ -144,6 +170,141 @@
         updateDemo(key);
       });
     });
+
+    // File Upload Handler
+    if (triggerUploadBtn && fileInput) {
+      triggerUploadBtn.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        currentPhotoMime = file.type || 'image/jpeg';
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          currentPhotoBase64 = re.target.result;
+          if (snapPhoto) snapPhoto.src = currentPhotoBase64;
+          if (previewImg) previewImg.src = currentPhotoBase64;
+          snapBtns.forEach(b => b.classList.remove('active'));
+          if (snapSubject) snapSubject.textContent = file.name.replace(/\.[^/.]+$/, '');
+          if (snapCategory) snapCategory.textContent = 'Custom Uploaded Product';
+          if (snapBrand) snapBrand.textContent = 'Ready to Generate';
+          if (snapTagline) snapTagline.textContent = 'Click "Generate Live Store with AI" below';
+          if (statusBanner) statusBanner.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // AI Store Generation Handler
+    if (generateAiBtn) {
+      generateAiBtn.addEventListener('click', async () => {
+        if (statusBanner) {
+          statusBanner.style.display = 'block';
+          statusBanner.style.background = '#eff6ff';
+          statusBanner.style.color = '#1e40af';
+          statusBanner.style.border = '1px solid #bfdbfe';
+          if (statusText) statusText.textContent = 'Analyzing photo with Gemini Vision AI...';
+        }
+        generateAiBtn.disabled = true;
+        generateAiBtn.textContent = '⏳ Generating Storefront...';
+
+        const directive = directiveInput ? directiveInput.value.trim() : '';
+
+        // Prepare request body
+        const reqPayload = {};
+        if (currentPhotoBase64) {
+          reqPayload.image = currentPhotoBase64;
+          reqPayload.mimeType = currentPhotoMime;
+        } else if (DEMO_SNAPS[currentPresetKey]) {
+          reqPayload.imagePath = DEMO_SNAPS[currentPresetKey].image;
+        }
+        if (directive) {
+          reqPayload.directive = directive;
+        }
+
+        try {
+          setTimeout(() => {
+            if (statusText && statusBanner.style.display !== 'none') {
+              statusText.textContent = 'Curating product catalog, variants & theme tokens...';
+            }
+          }, 2500);
+
+          setTimeout(() => {
+            if (statusText && statusBanner.style.display !== 'none') {
+              statusText.textContent = 'Persisting storefront to PostgreSQL database...';
+            }
+          }, 4500);
+
+          const res = await fetch('/api/generate-store', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(reqPayload)
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Failed to generate storefront');
+          }
+
+          const store = data.store;
+          const products = data.products || [];
+          const firstProduct = products[0] || {};
+
+          // Update UI with generated store projection
+          if (snapBrand) snapBrand.textContent = store.name;
+          if (snapTagline) snapTagline.textContent = store.tagline;
+          if (snapSubject) snapSubject.textContent = store.detectedSubject || store.name;
+          if (snapCategory) snapCategory.textContent = store.category;
+          if (snapArchetype) snapArchetype.textContent = store.archetype.toUpperCase();
+          if (snapMode) snapMode.textContent = store.businessMode;
+          if (snapFonts) snapFonts.textContent = (store.fontDisplay || 'Plus Jakarta Sans').replace(/"/g, '') + ' + ' + (store.fontBody || 'Inter').replace(/"/g, '');
+
+          if (previewTitle) previewTitle.textContent = store.name;
+          if (previewTagline) previewTagline.textContent = store.tagline;
+          if (previewBadge) previewBadge.textContent = store.businessMode;
+          if (previewHandle) previewHandle.textContent = `snapbrand.site/@${store.handle}`;
+          if (previewProduct) previewProduct.textContent = firstProduct.title || 'Featured Product';
+          if (previewPrice) previewPrice.textContent = `${store.currencySymbol || '$'}${typeof firstProduct.price === 'number' ? firstProduct.price.toFixed(2) : firstProduct.price}`;
+          if (previewLink) {
+            previewLink.href = data.storefrontUrl;
+            previewLink.textContent = `Open @${store.handle} Storefront →`;
+          }
+
+          if (statusBanner) {
+            statusBanner.style.display = 'block';
+            statusBanner.style.background = '#f0fdf4';
+            statusBanner.style.color = '#15803d';
+            statusBanner.style.border = '1px solid #bbf7d0';
+            statusBanner.innerHTML = `
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <span>✨ Storefront <strong>@${store.handle}</strong> published to database with ${products.length} products!</span>
+                <a href="${data.storefrontUrl}" class="btn btn-sm btn-primary" style="background:#16a34a;color:#fff;text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:700;">
+                  Visit Live Store →
+                </a>
+              </div>
+            `;
+          }
+        } catch (err) {
+          console.error('[SnapBrand Client] Generation error:', err);
+          if (statusBanner) {
+            statusBanner.style.display = 'block';
+            statusBanner.style.background = '#fef2f2';
+            statusBanner.style.color = '#b91c1c';
+            statusBanner.style.border = '1px solid #fecaca';
+            statusBanner.textContent = `⚠️ ${err.message || 'Generation failed. Please try again.'}`;
+          }
+        } finally {
+          generateAiBtn.disabled = false;
+          generateAiBtn.textContent = '⚡ Generate Live Store with AI';
+        }
+      });
+    }
 
     // Default to headset
     updateDemo('headset');

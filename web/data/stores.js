@@ -597,14 +597,14 @@ try {
   console.warn('[SnapBrand Data] Database module not loaded, falling back to static fixtures:', e.message);
 }
 
-function getStoreByHandle(handle) {
+async function getStoreByHandle(handle) {
   if (!handle) return null;
   const clean = handle.replace(/^@/, '').toLowerCase().trim();
 
   // 1. Primary: Persistent Database Lookup
   if (dbModule) {
     try {
-      const dbStore = dbModule.getPublicStorefrontByHandle(clean);
+      const dbStore = await dbModule.getPublicStorefrontByHandle(clean);
       if (dbStore) {
         return dbStore;
       }
@@ -617,13 +617,13 @@ function getStoreByHandle(handle) {
   return STORES[clean] || null;
 }
 
-function getAllStores() {
+async function getAllStores() {
   let storesList = [];
 
   // 1. Primary: Persistent Database Lookup
   if (dbModule) {
     try {
-      storesList = dbModule.getAllPublicStorefronts();
+      storesList = await dbModule.getAllPublicStorefronts();
     } catch (err) {
       console.error('[SnapBrand Data] Database error fetching all storefronts:', err.message);
     }
@@ -640,9 +640,21 @@ function getAllStores() {
   return storesList;
 }
 
+function getStoreByHandleSync(handle) {
+  if (!handle) return null;
+  const clean = handle.replace(/^@/, '').toLowerCase().trim();
+  return STORES[clean] || null;
+}
+
+function getAllStoresSync() {
+  return Object.values(STORES);
+}
+
 module.exports = {
   STORES,
   getStoreByHandle,
   getAllStores,
+  getStoreByHandleSync,
+  getAllStoresSync,
   db: dbModule
 };
